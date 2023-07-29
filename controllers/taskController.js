@@ -1,4 +1,5 @@
 const Task = require('../models/taskModel');
+const Features = require('../utils/Features');
 
 const createTask = async (req, res) => {
   try {
@@ -21,7 +22,9 @@ const createTask = async (req, res) => {
 
 const getAllTask = async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const features = new Features(Task.find(), req.query).filter().sort();
+
+    const tasks = await features.query;
 
     res.status(200).json({
       status: 'success',
