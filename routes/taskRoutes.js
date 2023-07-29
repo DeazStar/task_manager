@@ -8,6 +8,8 @@ router
   .get(taskController.getAllTask)
   .post(taskController.createTask);
 
+router.route('/get-stat').get(taskController.getTaskStat);
+
 router
   .route('/:id')
   .get(taskController.getTaskById)
