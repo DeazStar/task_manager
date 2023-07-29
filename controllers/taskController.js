@@ -22,7 +22,11 @@ const createTask = async (req, res) => {
 
 const getAllTask = async (req, res) => {
   try {
-    const features = new Features(Task.find(), req.query).filter().sort();
+    const features = new Features(Task.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
     const tasks = await features.query;
 
