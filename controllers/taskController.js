@@ -67,7 +67,9 @@ const getTaskById = async (req, res) => {
 
 const updateTask = async (req, res) => {
   try {
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body);
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
 
     res.status(200).json({
       status: 'success',
@@ -100,10 +102,42 @@ const deleteTask = async (req, res) => {
   }
 };
 
+const getTaskStat = async (req, res) => {
+  try {
+    const stat = await Task.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          taskNum: { $sum: 1 },
+        },
+      },
+      {
+        $addFields: { taskStatus: '$_id' },
+      },
+      {
+        $project: { _id: 0 },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        totalTask: await Task.countDocuments(),
+        stat,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failed',
+      message: `Internal server error ${err}`,
+    });
+  }
+};
+
 module.exports = {
   createTask,
   getAllTask,
   getTaskById,
   updateTask,
   deleteTask,
+  getTaskStat,
 };
