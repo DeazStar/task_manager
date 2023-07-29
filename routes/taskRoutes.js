@@ -8,4 +8,10 @@ router
   .get(taskController.getAllTask)
   .post(taskController.createTask);
 
+router
+  .route('/:id')
+  .get(taskController.getTaskById)
+  .patch(taskController.updateTask)
+  .delete(taskController.deleteTask);
+
 module.exports = router;
