@@ -20,7 +20,7 @@ const sendProductionError = (err, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Something went wrong',
-      error: err.name,
+      error: err,
     });
   }
 };
@@ -36,6 +36,14 @@ const handleValidationError = (err) => {
 const handleCastError = (err) => {
   const statusCode = 404;
   const message = `there is no id with the value of ${err.value}`;
+
+  return new AppError(message, statusCode);
+};
+
+const handleDuplicateError = (err) => {
+  const statusCode = 400;
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const message = `Duplicate filed value: ${value}. Please use another Value!`;
 
   return new AppError(message, statusCode);
 };
@@ -56,6 +64,8 @@ module.exports = async (err, req, res, next) => {
     if (err.name === 'ValidationError') error = handleValidationError(err);
 
     if (err.name === 'CastError') error = handleCastError(err);
+
+    if (err.code === 11000) error = handleDuplicateError(err);
 
     sendProductionError(error, res);
   }
