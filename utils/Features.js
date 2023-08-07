@@ -44,6 +44,12 @@ class Features {
 
     return this;
   }
+
+  excludePassword() {
+    this.query = this.query.select('-password');
+
+    return this;
+  }
 }
 
 module.exports = Features;
