@@ -48,6 +48,12 @@ const handleDuplicateError = (err) => {
   return new AppError(message, statusCode);
 };
 
+const handleJWTTokenError = () =>
+  new AppError('Invalid token, Please login', 401);
+
+const handleExpiredTokenError = () =>
+  new AppError('Expired Token, Please login', 401);
+
 module.exports = async (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
@@ -67,6 +73,9 @@ module.exports = async (err, req, res, next) => {
 
     if (err.code === 11000) error = handleDuplicateError(err);
 
+    if (err.name === 'JsonWebTokenError') error = handleJWTTokenError();
+
+    if (err.name === 'TokenExpiredError') error = handleExpiredTokenError();
     sendProductionError(error, res);
   }
 };
