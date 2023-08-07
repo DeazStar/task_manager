@@ -20,6 +20,8 @@ mongoose
   });
 const port = process.env.PORT || 5000;
 
+app.set('port', port);
+
 const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
