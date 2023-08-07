@@ -5,9 +5,9 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 const userSchema = mongoose.Schema({
-  userName: {
+  username: {
     type: String,
-    required: [true, 'Please provide your full name'],
+    required: [true, 'Please provide your username'],
     trim: true,
     unique: true,
   },
@@ -33,6 +33,14 @@ const userSchema = mongoose.Schema({
     },
     select: false,
   },
+  passwordUpdatedAt: {
+    type: Date,
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user'],
+    default: 'user',
+  },
 });
 
 userSchema.pre('save', async function (next) {
@@ -47,6 +55,15 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.correctPassword = async function (password, userPassword) {
   return await bcrypt.compare(password, userPassword);
+};
+
+userSchema.methods.checkExpiredToken = async function (TokenIssuedDate) {
+  if (this.passwordUpdatedAt) {
+    const updatedTimeStamp = this.passwordUpdatedAt.getTime() / 1000;
+
+    return TokenIssuedDate < updatedTimeStamp;
+  }
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);
