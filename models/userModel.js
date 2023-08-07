@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const validator = require('validator');
@@ -41,6 +42,8 @@ const userSchema = mongoose.Schema({
     enum: ['admin', 'user'],
     default: 'user',
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -64,6 +67,19 @@ userSchema.methods.checkExpiredToken = async function (TokenIssuedDate) {
     return TokenIssuedDate < updatedTimeStamp;
   }
   return false;
+};
+
+userSchema.methods.generateResetToken = function () {
+  const token = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return token;
 };
 
 const User = mongoose.model('User', userSchema);
