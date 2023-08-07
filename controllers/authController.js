@@ -1,9 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
+const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../errors/catchAsync');
 const AppError = require('../errors/AppError');
+const sendEmail = require('../utils/email');
 
 const sign = (userId) =>
   jwt.sign({ userId: userId }, process.env.JWT_SECRET, {
@@ -92,9 +94,78 @@ const restrictTo =
     next();
   };
 
+const forgetPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next(new AppError('Email field should be specified', 400));
+  }
+
+  const user = await User.findOne({ email: email });
+
+  if (!user) {
+    return next(new AppError('There is no user with this email', 404));
+  }
+
+  const resetToken = user.generateResetToken();
+
+  if (!resetToken) {
+    return next(new AppError("Can't generate reset token", 500));
+  }
+
+  user.save();
+
+  const url = `${req.protocol}://${req.hostname}:${process.env.PORT}${req.baseUrl}
+  /resetPassword/${resetToken}`;
+
+  await sendEmail({
+    email: 'naodararsa7@gmail.com',
+    subject: 'Reset token valid for 10 minutes',
+    message: `click this url if you send a forget password if this is not intended for you just
+    forget ${url}`,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'email sent successfully',
+  });
+};
+
+const resetPassword = catchAsync(async (req, res, next) => {
+  const token = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  console.log(token);
+
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: { $gte: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new AppError('token expired or there is no user with this token', 404),
+    );
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  user.save();
+
+  const jwtToken = sign(user._id);
+  res.status(200).json({
+    status: 'success',
+    token: jwtToken,
+  });
+});
+
 module.exports = {
   signup,
   login,
   protect,
   restrictTo,
+  forgetPassword,
+  resetPassword,
 };
