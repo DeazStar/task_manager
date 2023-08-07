@@ -1,11 +1,12 @@
 const express = require('express');
 const taskController = require('../controllers/taskController');
+const authController = require('../controllers/authController');
 
 const router = express.Router();
 
 router
   .route('/')
-  .get(taskController.getAllTask)
+  .get(authController.protect, taskController.getAllTask)
   .post(taskController.createTask);
 
 router.route('/get-stat').get(taskController.getTaskStat);
