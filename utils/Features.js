@@ -11,7 +11,7 @@ class Features {
 
     if (queryObj.name) {
       console.log(this.queryObj.name);
-      this.queryObj.name = new RegExp(`^${this.queryObj.name}`, 'i');
+      queryObj.name = new RegExp(`^${queryObj.name}`, 'i');
     }
     this.query = this.query.find(this.queryObj);
     return this;
