@@ -119,7 +119,7 @@ const forgetPassword = async (req, res, next) => {
   /resetPassword/${resetToken}`;
 
   await sendEmail({
-    email: 'naodararsa7@gmail.com',
+    email: req.body.email,
     subject: 'Reset token valid for 10 minutes',
     message: `click this url if you send a forget password if this is not intended for you just
     forget ${url}`,
@@ -132,9 +132,10 @@ const forgetPassword = async (req, res, next) => {
 };
 
 const resetPassword = catchAsync(async (req, res, next) => {
-  const token = crypto.createHash('sha256').update(req.params.token).digest('hex');
-
-  console.log(token);
+  const token = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
 
   const user = await User.findOne({
     passwordResetToken: token,
